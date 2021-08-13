@@ -1,0 +1,142 @@
+﻿@page "/indice-usuarios"
+@inject IRepositorio repositorio
+@inject IMostrarMensajes mostrarMensajes
+@inject IJSRuntime JS
+
+@attribute [Authorize(Roles = "Admin")]
+@using System.IO
+@using System.Text.Json
+<div style="text-align:center">
+    <h3>Lista de Usuarios:</h3>
+</div>
+
+<br />
+<div class="form-group">
+    <a class="btn btn-success" href="crear-usuario">Registrar Nuevo Usuario</a>
+</div>
+
+
+<div class="form-inline">
+    <label class="sr-only" for="nombre-filtro">Filtrar</label>
+    <input type="text" class="form-control mb-2 mr-sm-2"
+           @bind="nombreClienteFiltro" placeholder="Filtrar por Usuario" @onkeyup="@BuscarEnter" />
+    <button id="btnFiltrar" type="button" class="btn btn-primary mr-sm-2 mb-2"
+            @onclick="Filtrar">
+        Filtrar
+    </button>
+    <button type="button" class="btn btn-danger mb-2"
+            @onclick="Limpiar">
+        Limpiar
+    </button>
+
+</div>
+
+
+<ListadoGenerico Listado="Usuarios">
+    <HayRegistrosCompleto>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var usuario in Usuarios)
+                {
+                    <tr>
+                        <td>
+
+                            <a class="btn btn-success" href="editar-usuario/@usuario.ID">Editar</a>
+                            <button class="btn btn-danger" @onclick="@(() => BorrarUsuario(usuario.ID))">Borrar</button>
+                        </td>
+                        <td>@usuario.UserName</td>
+                        <td>@usuario.Email</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    </HayRegistrosCompleto>
+</ListadoGenerico>
+
+<Paginacion PaginasTotales="paginasTotales" PaginaActual="paginaActual" Radio="2"
+            PaginaSeleccionada="PaginaSeleccionada"></Paginacion>
+
+ 
+
+
+@code {
+    List<Usuario> Usuarios { get; set; }
+    private int paginasTotales;
+    private int paginaActual = 1;
+    private string nombreClienteFiltro = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarUsuarios();
+    }
+
+    private async Task PaginaSeleccionada(int pagina)
+    {
+        paginaActual = pagina;
+        await CargarUsuarios(pagina);
+    }
+
+    private async Task Filtrar()
+    {
+        paginaActual = 1;
+        await CargarUsuarios();
+    }
+
+    private async Task BuscarEnter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            paginaActual = 1;
+            await CargarUsuarios();
+        }
+    }
+
+
+    private async Task Limpiar()
+    {
+        nombreClienteFiltro = string.Empty;
+        paginaActual = 1;
+        await CargarUsuarios();
+    }
+
+    async Task CargarUsuarios(int pagina = 1, int cantidadRegistrosAMostrar = 10)
+    {
+        var responseHttp = await repositorio.Get<List<Usuario>>($"api/usuarios/mostrar?pagina={pagina}&CantidadAMostrar={cantidadRegistrosAMostrar}&nombre={nombreClienteFiltro}");
+        Usuarios = responseHttp.Response;
+        paginasTotales = int.Parse(responseHttp.HttpResponseMessage.Headers.GetValues("totalPaginas").FirstOrDefault());
+    }
+
+    async Task BorrarUsuario(string idUsuario)
+    {
+        var personaSeleccionada = Usuarios.First(x => x.ID == idUsuario);
+        string mensajeConfirmacion = $"¿Deseas borrar al Usuario {personaSeleccionada.UserName}?";
+        if (await JS.Confirm("Confirmar", mensajeConfirmacion, TipoMensajeSweetAlert.question))
+        {
+            try {
+                var responseHttp = await repositorio.Delete($"api/usuarios/Eliminar/{idUsuario}");
+                if (responseHttp.Error)
+                {
+                    await mostrarMensajes.MostrarMensajeError(await responseHttp.GetBody());
+                }
+                else
+                {
+                    await CargarUsuarios();
+                }
+            }
+            catch (Exception ex)
+            {
+                await mostrarMensajes.MostrarMensajeError(ex.Message);
+            }
+        }
+    }
+
+     
+    }  

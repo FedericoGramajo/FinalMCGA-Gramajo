@@ -1,0 +1,63 @@
+﻿@page "/editar-producto/{Idproducto:int}"
+@inject IRepositorio repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+@inject IJSRuntime JS
+@attribute [Authorize(Roles = "Admin, Encargado, Stock")]
+@inject IAuthorizationService AuthorizationService
+
+<h3>Editar Producto</h3>
+
+@if (producto != null)
+{
+    <FormularioProducto TextoBoton="Editar Producto" OnValidSubmit="@EditarProducto" producto="@producto" />
+
+}
+
+@code {
+    [CascadingParameter] Task<AuthenticationState> authenticationStateTask { get; set; }
+    System.Security.Claims.ClaimsPrincipal User { get; set; }
+    [Parameter] public int idproducto { get; set; }
+    Producto producto;
+
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        var httpResponse = await repositorio.Get<Producto>($"api/productos/{idproducto}");    // juan
+
+        if (httpResponse.Error)
+        {
+
+            await mostrarMensaje.MostrarMensajeError(await httpResponse.GetBody());
+
+        }
+        else
+        {
+            producto = httpResponse.Response;
+        }
+    }
+
+    private async Task EditarProducto()
+    {
+        try
+        {
+            User = (await authenticationStateTask).User;
+            var httpResponse = await repositorio.Put<Producto>($"api/productos/{User.Identity.Name}", producto);
+
+            if (httpResponse.Error)
+            {
+                await mostrarMensaje.MostrarMensajeError(await httpResponse.GetBody());
+            }
+            else
+            {
+                navigationManager.NavigateTo("indice-productos");
+            }
+        }
+        catch (Exception ex)
+        {
+            await mostrarMensaje.MostrarMensajeError(ex.Message);
+        }
+    } 
+    
+    }

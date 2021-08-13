@@ -1,0 +1,70 @@
+﻿@inject IRepositorio repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+
+
+
+    <EditForm Model="proveedor" OnValidSubmit="@OnValidSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="form-field col-4">
+            <label>Empresa, Nombre Apellido:</label>
+            <div>
+                <InputText Class="form-control" @bind-Value="@proveedor.Nombre" />
+                <ValidationMessage For="@(() => proveedor.Nombre)" />
+            </div>
+        </div>
+        <div class="form-field col-4">
+            <label>CUIT, DNI:</label>
+            <div>
+                <InputText Class="form-control" @bind-Value="@proveedor.CuitDni" />
+                <ValidationMessage For="@(() => proveedor.CuitDni)" />
+            </div>
+        </div>
+        <div class="form-field col-4">
+            <label>Telefono:</label>
+            <div>
+                <InputText Class="form-control" @bind-Value="@proveedor.Telefono" />
+                <ValidationMessage For="@(() => proveedor.Telefono)" />
+            </div>
+        </div>
+        <div class="form-field col-4">
+            <label>Direccion:</label>
+            <div>
+                <InputText Class="form-control" @bind-Value="@proveedor.Direccion" />
+                <ValidationMessage For="@(() => proveedor.Direccion)" />
+            </div>
+        </div>
+        <div class="form-field col-4">
+            <label>Localidad:</label>
+            <div>
+                <InputText Class="form-control" @bind-Value="@proveedor.Localidad" />
+                <ValidationMessage For="@(() => proveedor.Localidad)" />
+            </div>
+        </div>
+ 
+
+        <br />
+
+        <div class="form-field col-4">
+            <a class="btn btn-warning" href="javascript:history.go(-1)">Volver</a>
+            <button type="submit" class="btn btn-primary">@TextoBoton</button>
+        </div>
+
+        <br />
+
+    </EditForm>
+
+@code { [Parameter] public Proveedor proveedor { get; set; } = new Proveedor();
+    [Parameter] public String TextoBoton { get; set; } = "Guardar";
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+
+   
+
+
+   
+
+
+}
+
+

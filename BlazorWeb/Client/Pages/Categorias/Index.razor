@@ -1,0 +1,148 @@
+﻿@page "/indice-categorias"
+
+@inject IRepositorio repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject IJSRuntime JS
+@inject NavigationManager navigationManager
+@attribute [Authorize]
+@using System.IO
+@using System.Text.Json
+<div style="text-align:center">
+    <h3>Lista de RUBROS:</h3>
+</div>
+
+<br />
+
+<div class="form-group">
+    <a class="btn btn-success" href="crear-categoria">Crear un Nuevo RUBRO</a>
+</div>
+
+
+<div class="form-inline offset-2">
+    <label class="sr-only" for="nombre-filtro">Filtrar</label>
+    <input type="text" class="form-control mb-2 mr-sm-2"
+           @bind="nombreFiltro" placeholder="Filtrar por Nombre" @onkeyup="@BuscarEnter" />
+    <button id="btnFiltrar" type="button" class="btn btn-primary mr-sm-2 mb-2"
+            @onclick="Filtrar">
+        Filtrar
+    </button>
+    <button type="button" class="btn btn-danger mb-2"
+            @onclick="Limpiar">
+        Limpiar
+    </button>
+
+</div>
+
+<div class="col-6 offset-2">
+    <ListadoGenerico Listado="Categorias">
+        <HayRegistrosCompleto>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Nombre</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var categoria in Categorias)
+                    {
+                        <tr>
+                            <td>
+
+                                <a class="btn btn-success" href="editar-categoria/@categoria.CategoriaId">Editar</a>
+                                <button class="btn btn-danger" @onclick="@(() => BorrarCategoria(categoria.CategoriaId))">Borrar</button>
+
+                            </td>
+                            <td>@categoria.Rubro</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+        </HayRegistrosCompleto>
+    </ListadoGenerico>
+</div>
+<Paginacion PaginasTotales="paginasTotales" PaginaActual="paginaActual" Radio="2"
+            PaginaSeleccionada="PaginaSeleccionada"></Paginacion>
+
+<a class="btn btn-warning" href="javascript:history.go(-1)">Volver</a>
+
+ 
+
+
+@code {
+    List<Categoria> Categorias { get; set; }
+    private int paginasTotales;
+    private int paginaActual = 1;
+    private string nombreFiltro = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarCategorias();
+    }
+
+    private async Task PaginaSeleccionada(int pagina)
+    {
+        paginaActual = pagina;
+        await CargarCategorias(pagina);
+    }
+
+    private async Task Filtrar()
+    {
+        paginaActual = 1;
+        await CargarCategorias();
+    }
+
+    private async Task BuscarEnter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            paginaActual = 1;
+            await CargarCategorias();
+        }
+    }
+
+
+    private async Task Limpiar()
+    {
+        nombreFiltro = string.Empty;
+        paginaActual = 1;
+        await CargarCategorias();
+    }
+
+    async Task CargarCategorias(int pagina = 1, int cantidadRegistrosAMostrar = 10)
+    {
+        var responseHttp = await repositorio.Get<List<Categoria>>($"api/categorias/mostrar?pagina={pagina}&CantidadAMostrar={cantidadRegistrosAMostrar}&nombre={nombreFiltro}");
+        Categorias = responseHttp.Response;
+        paginasTotales = int.Parse(responseHttp.HttpResponseMessage.Headers.GetValues("totalPaginas").FirstOrDefault());
+    }
+
+    async Task BorrarCategoria(int idcategoria)
+    {
+        var Seleccionada = Categorias.First(x => x.CategoriaId == idcategoria);
+        string mensajeConfirmacion = $"¿Desea borrar el RUBRO {Seleccionada.Rubro}?";
+        if (await JS.Confirm("Confirmar", mensajeConfirmacion, TipoMensajeSweetAlert.question))
+        {
+            try
+            {
+                var responseHttp = await repositorio.Delete($"api/categorias/{idcategoria}");
+                if (responseHttp.Error)
+                {
+                    await mostrarMensaje.MostrarMensajeError(await responseHttp.GetBody());
+                }
+                else
+                {
+                    await CargarCategorias();
+                }
+            }
+
+            catch (Exception ex)
+            {
+                await mostrarMensaje.MostrarMensajeError(ex.Message);
+            }
+        }
+    }
+
+     
+
+    }

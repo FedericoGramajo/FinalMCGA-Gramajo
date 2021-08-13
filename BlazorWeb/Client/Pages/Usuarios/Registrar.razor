@@ -1,0 +1,38 @@
+﻿@page "/crear-usuario"
+@inject IRepositorio repositorio
+@inject NavigationManager navigationManager
+@inject IMostrarMensajes mostrarMensajes
+@inject IJSRuntime JSe
+@attribute [Authorize(Roles = "Admin")]
+
+
+<h3>Registro de Usuarios</h3>
+
+<FormularioUsuario TextoBoton="Crear Usuario" OnValidSubmit="@CrearUsuario" Usuario="@usuario"   />
+
+
+@code { private Usuario usuario = new Usuario();
+
+    private async Task CrearUsuario()
+    {
+        try
+        {
+            var httpResponse = await repositorio.Post<Usuario>("api/usuarios/crear", usuario);
+
+            if (httpResponse.Error)
+            {
+                await mostrarMensajes.MostrarMensajeError(await httpResponse.GetBody());
+            }
+            else
+            {
+                navigationManager.NavigateTo("indice-usuarios");
+            }
+        }
+
+        catch (Exception ex)
+        {
+            await mostrarMensajes.MostrarMensajeError(ex.Message);
+        }
+    }
+
+}

@@ -1,0 +1,130 @@
+﻿@page "/indice-historialproductos"
+@inject IRepositorio repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject IJSRuntime JS
+@inject NavigationManager navigationManager
+@attribute [Authorize]
+
+@using System.IO
+@using System.Text.Json
+
+
+<div style="text-align:center">
+    <h3>Historial de Movimiento de Productos:</h3>
+</div>
+
+<br />
+
+
+<div class="form-inline">
+    <label class="sr-only" for="nombre-filtro">Filtrar</label>
+    <input type="text" class="form-control mb-2 mr-sm-2"
+           @bind="nombreFiltro" placeholder="Filtrar por Nombre" @onkeyup="@BuscarEnter" />
+    <button id="btnFiltrar" type="button" class="btn btn-primary mr-sm-2 mb-2"
+            @onclick="Filtrar">
+        Filtrar
+    </button>
+    <button type="button" class="btn btn-danger mb-2"
+            @onclick="Limpiar">
+        Limpiar
+    </button>
+
+</div>
+
+
+<ListadoGenerico Listado="historialProductos">
+    <HayRegistrosCompleto>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Movimiento</th>
+                    <th>Fecha Edicion</th>
+                    <th>Ususario</th>
+                    <th>Nombre</th>
+                    <th>Stock Anterior</th>
+                    <th>Stock</th>
+                    <th>Precio Anterior</th>
+                    <th>Precio de Venta</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var historial in historialProductos)
+                {
+                    <tr>
+                        <td>@historial.Movimiento</td>
+                        <td>@historial.FechaEdicion</td>
+                        <td>@historial.NomUsusario</td>
+                        <td>@historial.Nombre</td>
+                        <td>@historial.Ant_Stock</td>
+                        <td>@historial.Stock</td>
+                        <td>@historial.Ant_Precio_venta</td>
+                        <td>@historial.Precio_venta</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    </HayRegistrosCompleto>
+</ListadoGenerico>
+
+<Paginacion PaginasTotales="paginasTotales" PaginaActual="paginaActual" Radio="2"
+            PaginaSeleccionada="PaginaSeleccionada"></Paginacion>
+
+ 
+
+
+@code {
+    List<HistorialProducto> historialProductos { get; set; }
+    private int paginasTotales;
+    private int paginaActual = 1;
+    private string nombreFiltro = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarHistorialProd();
+    }
+
+    private async Task PaginaSeleccionada(int pagina)
+    {
+        paginaActual = pagina;
+        await CargarHistorialProd(pagina);
+    }
+
+    private async Task Filtrar()
+    {
+        paginaActual = 1;
+        await CargarHistorialProd();
+    }
+
+    private async Task BuscarEnter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            paginaActual = 1;
+            await CargarHistorialProd();
+        }
+    }
+
+
+    private async Task Limpiar()
+    {
+        nombreFiltro = string.Empty;
+        paginaActual = 1;
+        await CargarHistorialProd();
+    }
+
+    //            MOSTRAR
+    async Task CargarHistorialProd(int pagina = 1, int cantidadRegistrosAMostrar = 10)
+    {
+        var responseHttp = await repositorio.Get<List<HistorialProducto>>($"api/productos/mostrarhistorial?pagina={pagina}&CantidadAMostrar={cantidadRegistrosAMostrar}&nombre={nombreFiltro}");
+        historialProductos = responseHttp.Response;
+        paginasTotales = int.Parse(responseHttp.HttpResponseMessage.Headers.GetValues("totalPaginas").FirstOrDefault());
+    }
+
+     
+
+
+}
+
+

@@ -1,0 +1,165 @@
+﻿@page "/indice-productos"
+
+@using System.IO
+@using System.Text.Json
+@inject IRepositorio repositorio
+@inject IMostrarMensajes mostrarMensajes
+@inject IJSRuntime JS
+
+@attribute [Authorize]
+@inject IAuthorizationService AuthorizationService
+
+<div style="text-align:center">
+    <h3>Lista de Productos:</h3>
+</div>
+
+<br />
+<div class="form-group">
+    <a class="btn btn-info" href="indice-categorias">Administrar RUBROS</a>
+</div>
+<div class="form-group">
+    <a class="btn btn-success" href="crear-producto">Crear Nuevo Producto</a>
+</div>
+
+
+<div class="form-inline">
+    <label class="sr-only" for="nombre-filtro">Filtrar</label>
+    <input type="text" class="form-control mb-2 mr-sm-2"
+           @bind="nombreFiltro" placeholder="Filtrar por Nombre" @onkeyup="@BuscarEnter" />
+    <button id="btnFiltrar" type="button" class="btn btn-primary mr-sm-2 mb-2"
+            @onclick="Filtrar">
+        Filtrar
+    </button>
+    <button type="button" class="btn btn-danger mb-2"
+            @onclick="Limpiar">
+        Limpiar
+    </button>
+
+</div>
+
+
+
+<ListadoGenerico Listado="Productos">
+    <HayRegistrosCompleto>
+        <table class="table container">
+            <thead>
+                <tr class="row">
+
+                    <th class="offset-2 col-1">Codigo</th>
+                    <th class="col-4">Nombre</th>
+                    <th class="col-1">Stock</th>
+                    <th class="col-1">Precio Compra</th>
+                    <th class="col-1">Precio Venta</th>
+                    <th class="col-1">Rubro</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var producto in Productos)
+                {
+                    <tr class="row">
+                        <td class="col-2">
+                            <AuthorizeView Roles="Admin, Encargado, Stock">
+                                <Authorized>
+                                    <a class="btn btn-success btn-sm" href="editar-producto/@producto.ProductoId">Editar</a>
+                                    <button class="btn btn-danger btn-sm " @onclick="@(() => BorrarProducto(producto.ProductoId))">Borrar</button>
+                                </Authorized>
+                            </AuthorizeView>
+                        </td>
+                        <td class="col-1">@producto.Codigo</td>
+                        <td class="col-4">@producto.Nombre</td>
+                        <td class="col-1">@producto.Stock</td>
+                        <td class="col-1">@producto.Precio_compra</td>
+                        <td class="col-1">@producto.Precio_venta</td>
+                        <td class="col-1">@producto.Categoria.Rubro</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    </HayRegistrosCompleto>
+</ListadoGenerico>
+
+<Paginacion PaginasTotales="paginasTotales" PaginaActual="paginaActual" Radio="2"
+            PaginaSeleccionada="PaginaSeleccionada"></Paginacion>
+
+
+@code {
+    [CascadingParameter] Task<AuthenticationState> authenticationStateTask { get; set; }
+    System.Security.Claims.ClaimsPrincipal User { get; set; }
+    List<Producto> Productos { get; set; }
+    private int paginasTotales;
+    private int paginaActual = 1;
+    private string nombreFiltro = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        User = (await authenticationStateTask).User;
+        await CargarProductos();
+    }
+
+
+    private async Task PaginaSeleccionada(int pagina)
+    {
+        paginaActual = pagina;
+        await CargarProductos(pagina);
+    }
+
+    private async Task Filtrar()
+    {
+        paginaActual = 1;
+        await CargarProductos();
+    }
+
+    private async Task BuscarEnter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            paginaActual = 1;
+            await CargarProductos();
+        }
+    }
+
+
+    private async Task Limpiar()
+    {
+        nombreFiltro = string.Empty;
+        paginaActual = 1;
+        await CargarProductos();
+    }
+
+    async Task CargarProductos(int pagina = 1, int cantidadRegistrosAMostrar = 10)
+    {
+        var responseHttp = await repositorio.Get<List<Producto>>($"api/productos/mostrar?pagina={pagina}&CantidadAMostrar={cantidadRegistrosAMostrar}&nombre={nombreFiltro}");
+        Productos = responseHttp.Response;
+        paginasTotales = int.Parse(responseHttp.HttpResponseMessage.Headers.GetValues("totalPaginas").FirstOrDefault());
+    }
+
+    async Task BorrarProducto(int idproducto)  // juan
+    {
+        var Seleccionada = Productos.First(x => x.ProductoId == idproducto);
+        string mensajeConfirmacion = $"¿Deseas borrar el Producto {Seleccionada.Nombre}?";
+        if (await JS.Confirm("Confirmar", mensajeConfirmacion, TipoMensajeSweetAlert.question))
+        {
+            try {
+                var responseHttp = await repositorio.Delete($"api/productos/{idproducto},{User.Identity.Name}");
+                if (responseHttp.Error)
+                {
+                    await mostrarMensajes.MostrarMensajeError(await responseHttp.GetBody());
+                }
+                else
+                {
+                    await CargarProductos();
+                }
+            }
+            catch (Exception ex)
+            {
+                await mostrarMensajes.MostrarMensajeError(ex.Message);
+            }
+        }
+    }
+
+     
+
+}

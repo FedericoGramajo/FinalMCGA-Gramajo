@@ -1,0 +1,267 @@
+﻿@inject IRepositorio repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+
+    <EditForm Model="producto" OnValidSubmit="@OnValidSubmit">
+        <DataAnnotationsValidator />
+        &nbsp
+        <div class="form-field col-4">
+            <label>Nombre: &nbsp</label>
+            <div>
+                <InputText Class="form-control" @bind-Value="@producto.Nombre" />
+                <ValidationMessage For="@(() => producto.Nombre)" />
+            </div>
+        </div>
+        &nbsp
+        <div class="form-fiel col-4">
+            <label>Codigo interno: &nbsp</label>
+            <div>
+                <InputText Class="form-control" @bind-Value="@producto.Codigo" />
+                <ValidationMessage For="@(() => producto.Codigo)" />
+            </div>
+        </div>
+        &nbsp
+        <div class="form-field col-4">
+            <label>Codigo de Barras:</label>
+            <div>
+                <InputText Class="form-control" @bind-Value="@producto.CodigoBarra" />
+                <ValidationMessage For="@(() => producto.CodigoBarra)" />
+            </div>
+        </div>
+        &nbsp
+        <div class="form-field col-4">
+            <label>Categoria/Rubro:</label>
+        </div>
+
+        <div class="form-inline col-12">
+            <div>
+              <RadzenDropDown AllowFiltering="false" AllowClear="true" Data="categorias"
+                              @bind-Value="producto.Categoria" TextProperty="Rubro" />
+                <ValidationMessage For="@(() => producto.Categoria)" />
+            </div>
+            <div class="form-field offset-1">
+                <button type="button" class="btn btn-dark" @onclick="@CrearRubroVisible" hidden="@BtnCrearRubro">Crear Rubro</button>
+            </div>
+            <div>
+                <InputText Class="form-control" @bind-Value="@NuevoRubro" placeholder="Ingrese el nuevo Rubro" hidden="@ControlCrearRubro" />
+            </div>
+            <div class="form-field offset-1">
+                <button type="button" class="btn btn-dark" @onclick="@( () =>  @CrearCategoria(@NuevoRubro) )" hidden="@ControlCrearRubro">Agregar</button>
+            </div>
+        </div>
+
+
+    
+        &nbsp
+        <div class="form-field col-4">
+          
+        </div>
+
+        <div class="form-inline col-12">
+            <div>
+                 <RadzenDropDown AllowFiltering="false" AllowClear="true" Data="proveedores"
+                                  @bind-Value="producto.Proveedor" TextProperty="Nombre" />
+                <ValidationMessage For="@(() => producto.Proveedor)" />
+            </div>
+
+            <div class="form-inline col-4">
+                <a class="btn btn-dark offset-1" href="crear-proveedor">Crear Nuevo Proveedor</a>
+            </div>
+
+        </div>
+        &nbsp
+        <div class="form-field col-4">
+            <label>Marca:</label>
+            <div>
+                <InputText Class="form-control" @bind-Value="@producto.Marca" />
+                <ValidationMessage For="@(() => producto.Marca)" />
+            </div>
+        </div>
+        &nbsp
+        <div class="form-field col-4">
+            <label>Stock:</label>
+            <div>
+                <InputNumber Class="form-control" @bind-Value="@producto.Stock" />
+                <ValidationMessage For="@(() => producto.Stock)" />
+            </div>
+        </div>
+
+        <div class="form-field col-2">
+            <label>IVA:</label>
+            <div>
+                <InputSelectNumber class="form-control" @bind-Value="@producto.Iva">
+                    @foreach (var item in listiva)
+                    {
+                        @if (item.valor == producto.Iva)
+                        {
+                            <option selected value="@item.valor">@item.Tipo</option> }
+                        else
+                        {
+                            <option value="@item.valor">@item.Tipo</option>}}
+                </InputSelectNumber>
+                <ValidationMessage For="@(() => producto.Iva)" />
+            </div>
+        </div>
+
+        <div class="form-field col-2">
+            <label>Precio Compra:</label>
+            <div>
+                <InputNumber Class="form-control" ValueChanged="@((decimal value) => CompraCambiado(value))"
+                             ValueExpression="@(() => producto.Precio_compra)"
+                             Value="@producto.Precio_compra" />
+                <ValidationMessage For="@(() => producto.Precio_compra)" />
+            </div>
+        </div>
+
+        <div class="form-field col-2">
+            <label>Margen:</label>
+            <div>
+                <InputNumber Class="form-control" ValueChanged="@((decimal value) => MargenCambiado(value))"
+                             ValueExpression="@(() => producto.Margen)"
+                             Value=" producto.Margen" />
+                <ValidationMessage For="@(() => producto.Margen)" />
+            </div>
+        </div>
+
+        <div class="form-field col-2">
+            <label>Precio Venta:</label>
+            <div>
+                <InputNumber Class="form-control" ValueChanged="@((decimal value) => VentaCambiado(value))"
+                             ValueExpression="@(() => producto.Precio_venta)"
+                             Value="@producto.Precio_venta" />
+                <ValidationMessage For="@(() => producto.Precio_venta)" />
+            </div>
+        </div>
+
+
+        <div class="form-field col-4">
+            <label>Descripcion:</label>
+            <div>
+                <InputText Class="form-control" @bind-Value="@producto.Descripcion" />
+                <ValidationMessage For="@(() => producto.Descripcion)" />
+            </div>
+        </div>
+
+        <div class="form-field col-4">
+            <label>Discontinuado:</label>
+            <div>
+                <InputSelect class="form-control"
+                             @bind-Value="@producto.Discontinuado">
+                    <option value="no">No</option>
+                    <option value="si">Si</option>
+                </InputSelect>
+                <ValidationMessage For="@(() => producto.Discontinuado)" />
+            </div>
+        </div>
+
+        <br />
+        <div class="form-field col-4">
+            <a class="btn btn-warning" href="javascript:history.go(-1)">Volver</a>
+            <button type="submit" class="btn btn-primary">@TextoBoton</button>
+        </div>
+        <br />
+
+    </EditForm>
+
+@code { [Parameter] public Producto producto { get; set; }
+    [Parameter] public String TextoBoton { get; set; } = "Guardar";
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    List<Categoria> categorias = new List<Categoria>();
+    List<Proveedor> proveedores = new List<Proveedor>();
+    List<Iva> listiva = new List<Iva>();
+    string NuevoRubro { get; set; }
+    bool BtnCrearRubro = false;
+    bool ControlCrearRubro = true;
+    string NuevoProveedor { get; set; }
+    decimal margen { get; set; }
+    decimal venta { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarCategoria();
+        await CargarProveedor();
+        CargarListaIva();
+    }
+
+    async Task CargarCategoria()
+    {
+        var responseHttp = await repositorio.Get<List<Categoria>>($"api/categorias/mostrartodos");
+        categorias = responseHttp.Response;
+    }
+
+    async Task CargarProveedor()
+    {
+        var responseHttp = await repositorio.Get<List<Proveedor>>($"api/proveedores/mostrartodos");
+        proveedores = responseHttp.Response;
+    }
+
+    void CargarListaIva()
+    {
+        Iva iva = new Iva { Tipo = "21 %", valor = 21 };
+        listiva.Add(iva);
+        iva = new Iva { Tipo = "10,5 %", valor = (21 / 2) };
+        listiva.Add(iva);
+        iva = new Iva { Tipo = "Exento", valor = 0 };
+        listiva.Add(iva);
+    }
+
+    private async Task CrearCategoria(string rubro)
+    {
+        Categoria categoria = new Categoria() { Rubro = rubro };
+        var httpResponse = await repositorio.Post<Categoria>("api/categorias", categoria);
+
+        if (httpResponse.Error)
+        {
+            await mostrarMensaje.MostrarMensajeError(await httpResponse.GetBody());
+        }
+        else
+        {
+            await CargarCategoria();
+            BtnCrearRubro = true;
+            ControlCrearRubro = true;
+            NuevoRubro = "";
+
+        }
+    }
+
+
+    private void CrearRubroVisible()
+    {
+        BtnCrearRubro = true;
+        ControlCrearRubro = false;
+
+    }
+
+
+
+    private void CompraCambiado(decimal value)
+    {
+        if (producto.Margen != 0 )
+        {
+            producto.Precio_venta = value + ((value * producto.Margen) / 100);
+        }
+        producto.Precio_compra = value;
+    }
+
+    private void MargenCambiado(decimal value)
+    {
+        if (producto.Precio_compra != 0 )
+        {
+            producto.Precio_venta = producto.Precio_compra + ((producto.Precio_compra * value) / 100);
+        }
+        producto.Margen = value;
+    }
+
+    private void VentaCambiado(decimal value)
+    {
+        if (producto.Precio_compra != 0)
+        {
+            producto.Margen = (((value - producto.Precio_compra) * 100) / producto.Precio_compra);
+        }
+        producto.Precio_venta = value;
+    }
+
+
+
+}

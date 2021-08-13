@@ -1,0 +1,45 @@
+﻿@page "/crear-producto"
+@inject IRepositorio repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+@inject IJSRuntime JS
+@attribute [Authorize]
+@inject IAuthorizationService AuthorizationService
+
+
+<h3>Registro de Productos</h3>
+
+<FormularioProducto TextoBoton="Crear Producto" OnValidSubmit="@CrearProducto" producto="@producto" />
+
+@code {
+    [CascadingParameter] Task<AuthenticationState> authenticationStateTask { get; set; }
+    System.Security.Claims.ClaimsPrincipal User { get; set; }
+    private Producto producto = new Producto();
+
+
+    private async Task CrearProducto()
+    {
+        try
+        {
+
+            User = (await authenticationStateTask).User;
+            var httpResponse = await repositorio.Post<Producto>($"api/productos/{User.Identity.Name}", producto);      // juan
+
+            if (httpResponse.Error)
+            {
+                await mostrarMensaje.MostrarMensajeError(await httpResponse.GetBody());
+            }
+            else
+            {
+                navigationManager.NavigateTo("indice-productos");
+            }
+        }
+        catch (Exception ex)
+        {
+            await mostrarMensaje.MostrarMensajeError(ex.Message);
+        }
+
+    } 
+    
+    }
+

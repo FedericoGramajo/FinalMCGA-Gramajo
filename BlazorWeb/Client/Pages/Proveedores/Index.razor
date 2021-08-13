@@ -1,0 +1,157 @@
+﻿@page "/indice-proveedores"
+@inject IRepositorio repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject IJSRuntime JS
+
+@inject NavigationManager navigationManager
+@attribute [Authorize]
+
+@using System.IO
+@using System.Text.Json
+
+
+<div style="text-align:center">
+    <h3>Lista de Proveedores:</h3>
+</div>
+
+<br />
+<div class="form-group">
+    <a class="btn btn-success" href="crear-proveedor">Registrar Nuevo Proveedor</a>
+</div>
+
+
+<div class="form-inline">
+    <label class="sr-only" for="nombre-filtro">Filtrar</label>
+    <input type="text" class="form-control mb-2 mr-sm-2"
+           @bind="nombreFiltro" placeholder="Filtrar por Nombre" @onkeyup="@BuscarEnter" />
+    <button id="btnFiltrar" type="button" class="btn btn-primary mr-sm-2 mb-2"
+            @onclick="Filtrar">
+        Filtrar
+    </button>
+    <button type="button" class="btn btn-danger mb-2"
+            @onclick="Limpiar">
+        Limpiar
+    </button>
+
+</div>
+
+
+<ListadoGenerico Listado="proveedor">
+    <HayRegistrosCompleto>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>RazonSocial</th>
+                    <th>Cuit-Dni</th>
+                    <th>Telefono</th>
+                    <th>Direccion</th>
+                    <th>Localidad</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var proveed in proveedor)
+                {
+                    <tr>
+                        <td>
+
+                            <a class="btn btn-success" href="editar-proveedor/@proveed.Id">Editar</a>
+                            <button class="btn btn-danger" @onclick="@(() => BorrarProveedor(proveed.Id))">Borrar</button>
+
+                        </td>
+                        <td>@proveed.Nombre</td>
+                        <td>@proveed.CuitDni</td>
+                        <td>@proveed.Telefono</td>
+                        <td>@proveed.Direccion</td>
+                        <td>@proveed.Localidad</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    </HayRegistrosCompleto>
+</ListadoGenerico>
+
+<Paginacion PaginasTotales="paginasTotales" PaginaActual="paginaActual" Radio="2"
+            PaginaSeleccionada="PaginaSeleccionada"></Paginacion>
+
+
+ 
+
+
+@code {
+    List<Proveedor> proveedor { get; set; }
+    private int paginasTotales;
+    private int paginaActual = 1;
+    private string nombreFiltro = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarProveedores();
+    }
+
+    private async Task PaginaSeleccionada(int pagina)
+    {
+        paginaActual = pagina;
+        await CargarProveedores(pagina);
+    }
+
+    private async Task Filtrar()
+    {
+        paginaActual = 1;
+        await CargarProveedores();
+    }
+
+    private async Task BuscarEnter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            paginaActual = 1;
+            await CargarProveedores();
+        }
+    }
+
+
+    private async Task Limpiar()
+    {
+        nombreFiltro = string.Empty;
+        paginaActual = 1;
+        await CargarProveedores();
+    }
+
+    async Task CargarProveedores(int pagina = 1, int cantidadRegistrosAMostrar = 10)
+    {
+        var responseHttp = await repositorio.Get<List<Proveedor>>($"api/proveedores/mostrar?pagina={pagina}&CantidadAMostrar={cantidadRegistrosAMostrar}&nombre={nombreFiltro}");
+        proveedor = responseHttp.Response;
+        paginasTotales = int.Parse(responseHttp.HttpResponseMessage.Headers.GetValues("totalPaginas").FirstOrDefault());
+    }
+
+    async Task BorrarProveedor(int idproveedor)
+    {
+        var Seleccionada = proveedor.First(x => x.Id == idproveedor);
+        string mensajeConfirmacion = $"¿Deseas borrar el Proveedor {Seleccionada.Nombre}?";
+        if (await JS.Confirm("Confirmar", mensajeConfirmacion, TipoMensajeSweetAlert.question))
+        {
+            try
+            {
+                var responseHttp = await repositorio.Delete($"api/proveedores/{idproveedor}");
+                if (responseHttp.Error)
+                {
+                    await mostrarMensaje.MostrarMensajeError(await responseHttp.GetBody());
+                }
+                else
+                {
+                    await CargarProveedores();
+                }
+            }
+            catch (Exception ex)
+            {
+                await mostrarMensaje.MostrarMensajeError(ex.Message);
+            }
+        }
+    }
+ 
+
+}
+
+

@@ -1,0 +1,70 @@
+﻿@page "/editar-categoria/{Idcategoria:int}"
+
+@inject IRepositorio repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject IJSRuntime JS
+@inject NavigationManager navigationManager
+@attribute [Authorize]
+<h3>Editar RUBRO</h3>
+
+@if (categoria != null)
+{
+    <FormularioCategoria TextoBoton="Editar" OnValidSubmit="@EditarCategoria" categoria="@categoria" />
+
+}
+
+@code {
+    [Parameter] public int idcategoria { get; set; }
+    Categoria categoria;
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        var httpResponse = await repositorio.Get<Categoria>($"api/categorias/{idcategoria}");
+
+        if (httpResponse.Error)
+        {
+            if (httpResponse.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("indice-categorias");
+            }
+            else
+            {
+                await mostrarMensaje.MostrarMensajeError(await httpResponse.GetBody());
+            }
+        }
+        else
+        {
+            categoria = httpResponse.Response;
+        }
+    }
+
+    private async Task EditarCategoria()
+    {
+        try
+        {
+
+            var httpResponse = await repositorio.Put<Categoria>("api/categorias", categoria);
+
+            if (httpResponse.Error)
+            {
+                await mostrarMensaje.MostrarMensajeError(await httpResponse.GetBody());
+            }
+            else
+            {
+                navigationManager.NavigateTo("indice-categorias");
+            }
+
+        }
+
+        catch (Exception ex)
+        {
+            await mostrarMensaje.MostrarMensajeError(ex.Message);
+        }
+    }
+
+    }
+
+
+
+

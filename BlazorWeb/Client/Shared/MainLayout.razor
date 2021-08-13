@@ -1,0 +1,44 @@
+﻿@inherits LayoutComponentBase
+@inject IJSRuntime js
+@inject BlazorWeb.Client.Auth.RenovadorToken renovadorToken
+@inject NavigationManager navigationManager
+@inject IRepositorio  repositorio
+
+    <div class="sidebar" style="height: 100vh; overflow-y: scroll; display: flex; flex-direction: column; justify-content: flex-start ">
+        <NavMenu />
+
+    </div>
+    <RadzenDialog />
+
+    <div class="main" style="background-color: white">
+        <div style="z-index: 10;" class="top-row px-4">
+            <EnlacesLogin />
+    
+        </div>
+        <div class="content px-4">
+            @Body
+        </div>
+    </div>
+
+    @code{ [CascadingParameter] public Task<AuthenticationState> AuthenticationState { get; set; }
+
+        protected override async Task OnInitializedAsync()
+        {
+            await js.InicializarTimerInactivo(DotNetObjectReference.Create(this));
+            renovadorToken.Iniciar();
+        }
+
+
+
+        [JSInvokable]
+        public async Task Logout()
+        {
+            var authState = await AuthenticationState;
+            if (authState.User.Identity.IsAuthenticated)
+            {
+                // Descomentar para activar deslogueo automático
+                navigationManager.NavigateTo("logout");
+            }
+        }
+
+    }

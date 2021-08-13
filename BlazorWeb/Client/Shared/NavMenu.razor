@@ -1,0 +1,195 @@
+﻿
+<div class="top-row pl-4 navbar navbar-dark">
+@*<nav style="background-color: #35016b" class="navbar navbar-dark ">*@  @*Para volver al formato original, eliminar esta linea y su </nav> de abajo y habilitar linea de arriba + los </div>*@
+<a class="navbar-brand" href="">  GT SISTEMAS</a>
+<button class="navbar-toggler" @onclick="ToggleNavMenu">
+    <span class="navbar-toggler-icon"></span>
+</button>
+</div>
+
+
+
+
+
+ 
+<ul class="nav flex-column">
+    <li class="nav-item px-3">
+        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <span class="oi oi-home" aria-hidden="true"></span> Home
+        </NavLink>
+    </li>
+
+
+    <AuthorizeView>
+        <Authorized>
+
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="" @onclick="abrirSubMenuCategoria">
+                    <span class="oi oi-folder" aria-hidden="true"></span> Categorias
+                </NavLink>
+                @if (expandSubMenuCategoria)
+                {
+                     
+                    <ul class="nav flex-column">
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="crear-categoria">
+                                <span class="oi oi-pencil" aria-hidden="true"></span> Reg. Categoria
+                            </NavLink>
+                        </li>
+                    </ul>
+                    <ul class="nav flex-column">
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="indice-categorias">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span> Lista Categorias
+                            </NavLink>
+                        </li>
+                    </ul>
+                }
+            </li>
+
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="" @onclick="abrirSubMenuProducto">
+                    <span class="oi oi-folder" aria-hidden="true"></span> Productos
+                </NavLink>
+                @if (expandSubMenuProducto)
+                {
+                    <ul class="nav flex-column">
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="crear-producto">
+                                <span class="oi oi-pencil" aria-hidden="true"></span> Reg. Producto
+                            </NavLink>
+                        </li>
+                    </ul>
+                    <ul class="nav flex-column">
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="indice-productos">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span> Lista Productos
+                            </NavLink>
+                        </li>
+                    </ul>
+                }
+            </li>
+
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="" @onclick="abrirSubMenuProveedor">
+                    <span class="oi oi-people" aria-hidden="true"></span> Proveedores
+                </NavLink>
+                @if (expandSubMenuProveedor)
+                {
+                    <ul class="nav flex-column">
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="crear-proveedor">
+                                <span class="oi oi-people" aria-hidden="true"></span> Reg. Proveedor
+                            </NavLink>
+                        </li>
+                    </ul>
+                    <ul class="nav flex-column">
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="indice-proveedores">
+                                <span class="oi oi-people" aria-hidden="true"></span> Proveedores
+                            </NavLink>
+                        </li>
+                    </ul>
+         
+                }
+            </li>
+
+        </Authorized>
+    </AuthorizeView>
+
+ 
+ 
+
+    <AuthorizeView Roles="Admin, Encargado, Finanzas">
+        <Authorized>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="" @onclick="abrirSubMenuListado">
+                    <span class="oi oi-list-rich" aria-hidden="true"></span> Listados
+                </NavLink>
+                @if (expandSubMenuListado)
+                {
+                    <ul class="nav flex-column">
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="indice-historialproductos">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span> Historial&nbspProductos
+                            </NavLink>
+                        </li>
+                    </ul>
+                }
+            </li>
+
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="" @onclick="abrirSubMenuEmpleado">
+                    <span class="oi oi-person" aria-hidden="true"></span> Usuarios
+                </NavLink>
+
+                @if (expandSubMenuEmpleado)
+                {
+                    <ul class="nav flex-column">
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="crear-usuario">
+                                <span class="oi oi-person" aria-hidden="true"></span> Reg. Usuario
+                            </NavLink>
+                        </li>
+                    </ul>
+                    <ul class="nav flex-column">
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="indice-usuarios">
+                                <span class="oi oi-person" aria-hidden="true"></span> Usuarios
+                            </NavLink>
+                        </li>
+                    </ul>
+                }
+            </li>
+        </Authorized>
+    </AuthorizeView>
+
+   
+</ul>
+
+
+@code {
+    bool collapseNavMenu = true;
+    bool expandSubMenuCategoria;
+    bool expandSubMenuProducto;
+    bool expandSubMenuProveedor;
+    bool expandSubMenuEmpleado;
+    bool expandSubMenuListado;
+
+    string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    void abrirSubMenuCategoria()
+    {
+        expandSubMenuCategoria = !expandSubMenuCategoria;
+    }
+
+
+    void abrirSubMenuProducto()
+    {
+        expandSubMenuProducto = !expandSubMenuProducto;
+    }
+
+
+
+    void abrirSubMenuProveedor()
+    {
+        expandSubMenuProveedor = !expandSubMenuProveedor;
+    }
+
+    void abrirSubMenuEmpleado()
+    {
+        expandSubMenuEmpleado = !expandSubMenuEmpleado;
+    }
+
+    void abrirSubMenuListado()
+    {
+        expandSubMenuListado = !expandSubMenuListado;
+    }
+
+
+}

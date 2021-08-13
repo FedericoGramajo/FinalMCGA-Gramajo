@@ -1,0 +1,69 @@
+﻿@page "/editar-usuario/{IdUsuario}"
+@inject IRepositorio repositorio
+@inject IMostrarMensajes mostrarMensaje
+@inject NavigationManager navigationManager
+@inject IJSRuntime JS
+@attribute [Authorize(Roles = "Admin")]
+
+<h3>Editar Usuario</h3>
+
+@if (usuario != null)
+{
+    <FormularioUsuario TextoBoton="Editar Usuario" OnValidSubmit="@EditarUsuario" usuario="@usuario"   />
+
+}
+
+
+@code {
+    [Parameter] public string IdUsuario { get; set; }
+    Usuario usuario;
+
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        var httpResponse = await repositorio.Get<Usuario>($"api/usuarios/{IdUsuario}");
+
+        if (httpResponse.Error)
+        {
+            if (httpResponse.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("indice-usuarios");
+            }
+            else
+            {
+                await mostrarMensaje.MostrarMensajeError(await httpResponse.GetBody());
+            }
+        }
+        else
+        {
+            usuario = httpResponse.Response;
+        }
+    }
+
+    private async Task EditarUsuario()
+    {
+        try
+        {
+            var httpResponse = await repositorio.Put<Usuario>("api/usuarios/Editar", usuario);
+
+            if (httpResponse.Error)
+            {
+                await mostrarMensaje.MostrarMensajeError(await httpResponse.GetBody());
+            }
+            else
+            {
+                navigationManager.NavigateTo("indice-usuarios");
+            }
+        }
+
+        catch (Exception ex)
+        {
+            await mostrarMensaje.MostrarMensajeError(ex.Message);
+        }
+
+    }
+
+
+
+}

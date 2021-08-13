@@ -1,0 +1,15 @@
+{
+  "name": "Gt-Sistemas",
+  "short_name": "Gt-Sistemas",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#03173d",
+  "icons": [
+    {
+      "src": "icono.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
