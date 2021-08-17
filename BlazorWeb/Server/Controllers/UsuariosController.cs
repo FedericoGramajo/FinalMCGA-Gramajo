@@ -45,6 +45,7 @@ namespace BlazorWeb.Server.Controllers
         [AllowAnonymous]
         public async Task<ActionResult<UserToken>> Login([FromBody] UserInfo userInfo)
         {
+            // capa seguridad del lado cliente Autorize, esta capa deserealiza el passworrd
             var result = await _signInManager.PasswordSignInAsync(userInfo.UserName, 
                 userInfo.Password, isPersistent: false, lockoutOnFailure: false);
 

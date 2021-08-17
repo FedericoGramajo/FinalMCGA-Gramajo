@@ -11,7 +11,7 @@ namespace BlazorWeb.Server.Helpers
         public static IQueryable<T> Paginar<T>(this IQueryable<T> queryable, Paginar paginacion)
         {
             return queryable
-                .Skip((paginacion.Pagina - 1) * paginacion.CantidadRegistros)
+                //.Skip((paginacion.Pagina - 1) * paginacion.CantidadRegistros)
                 .Take(paginacion.CantidadRegistros);
         }
     }

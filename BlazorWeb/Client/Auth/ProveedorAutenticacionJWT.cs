@@ -36,16 +36,17 @@ namespace BlazorWeb.Client.Auth
 
         public async override Task<AuthenticationState> GetAuthenticationStateAsync()
         {
+            //al iniciar la pagina busca token en el local storage
             var token = await js.GetFromLocalStorage(TOKENKEY);
-
+           
             if (string.IsNullOrEmpty(token))
             {
                 return Anonimo;
             }
-
+            //busca la fecha de expiracion del tocken en el local store
             var tiempoExpiracionString = await js.GetFromLocalStorage(EXPIRATIONTOKENKEY);
             DateTime tiempoExpiracion;
-
+            //si el formato es correcto, es date y no es null, pasa la fecha a tiempoExpiracion
             if (DateTime.TryParse(tiempoExpiracionString, out tiempoExpiracion))
             {
                 if (TokenExpirado(tiempoExpiracion))
@@ -113,12 +114,15 @@ namespace BlazorWeb.Client.Auth
             return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt")));
         }
 
+        //leer el nuevo token obtenido
         private IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
         {
             var claims = new List<Claim>();
             var payload = jwt.Split('.')[1];
+            //convierte el token string en byte base64
             var jsonBytes = ParseBase64WithoutPadding(payload);
             var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
+            //validar si el permiso es ed tipo NameIdentifier entonces obtiene el idusuario
             keyValuePairs.TryGetValue(ClaimTypes.NameIdentifier, out object userID);
             if (userID != null)
             {
